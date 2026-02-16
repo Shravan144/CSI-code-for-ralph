@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Highway Havoc: Save the Town</title>
+    <title>Highway Havoc: Radiator Springs</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Russo+One&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Tutorial Overlay -->
     <div id="tutorial-overlay">
         <div class="tutorial-box">
-            <div class="title-badge">🚧</div>
+            <div class="title-badge">
+                <div class="route66-badge">
+                    <span class="r66-text">66</span>
+                </div>
+            </div>
             <h1>Highway <span class="accent">Havoc</span></h1>
-            <h2>— Save the Town! —</h2>
+            <h2 class="subtitle-rs">⛽ Radiator Springs Edition ⛽</h2>
             <div class="tutorial-content">
-                <p class="tagline">A super highway is draining traffic from your desert town.<br>Take control. Redirect cars. Save the economy.</p>
+                <p class="tagline">The Interstate bypassed Radiator Springs and the town is dying.<br>Route cars off the highway and through town to save the economy!<br><em class="movie-quote">"I create feelings in others that they themselves don't understand."</em></p>
                 <div class="tutorial-instructions">
                     <div class="instruction-item">
                         <span class="instruction-num">1</span>
@@ -26,11 +31,11 @@
                     </div>
                     <div class="instruction-item">
                         <span class="instruction-num">3</span>
-                        <span><strong>Route</strong> cars through town (center)</span>
+                        <span><strong>Route</strong> cars through <strong>Radiator Springs</strong></span>
                     </div>
                     <div class="instruction-item">
                         <span class="instruction-num">4</span>
-                        <span>Survive <strong>5 levels</strong> of increasing chaos</span>
+                        <span>Survive <strong>5 levels</strong> — restore the town!</span>
                     </div>
                 </div>
                 <div class="powers-row">
@@ -38,9 +43,17 @@
                     <div class="power-chip"><kbd>W</kbd> Clear</div>
                     <div class="power-chip"><kbd>E</kbd> Boost</div>
                 </div>
-                <p class="warning-hint">⚠ Roads shuffle &amp; gates auto-toggle at higher levels</p>
+                <div class="characters-banner">
+                    <span class="char-pill mcqueen">McQueen</span>
+                    <span class="char-pill mater">Mater</span>
+                    <span class="char-pill sally">Sally</span>
+                    <span class="char-pill doc">Doc</span>
+                    <span class="char-pill luigi">Luigi</span>
+                    <span class="char-pill">+5 more</span>
+                </div>
+                <p class="warning-hint">🏁 Roads shuffle &amp; gates auto-toggle at higher levels</p>
             </div>
-            <button id="start-btn" class="action-btn">▶ PLAY</button>
+            <button id="start-btn" class="action-btn">🏁 START YOUR ENGINES</button>
         </div>
     </div>
 
@@ -55,6 +68,12 @@
 
     <!-- Game Container -->
     <div id="game-container">
+        <!-- Cars Theme Banner -->
+        <div id="theme-banner">
+            <span class="banner-route">ROUTE 66</span>
+            <span class="banner-title">⛽ RADIATOR SPRINGS ⛽</span>
+            <span class="banner-tagline">Welcome!</span>
+        </div>
         <!-- Top Dashboard -->
         <div id="top-bar">
             <div class="stat-group">
@@ -101,7 +120,7 @@
                 <div id="weather-overlay"></div>
                 <div id="combo-popup" class="hidden"></div>
                 <div id="level-banner" class="hidden"></div>
-                <div id="shuffle-warn" class="hidden">ROADS SHUFFLING!</div>
+                <div id="shuffle-warn" class="hidden">\ud83c\udfc1 ROUTE 66 SHIFTING!</div>
             </div>
         </div>
 
@@ -131,8 +150,16 @@
 
         <!-- Bottom Controls -->
         <div id="bottom-bar">
-            <button id="pause-btn" class="control-btn">PAUSE</button>
-            <button id="restart-btn" class="control-btn">RESTART</button>
+            <button id="pause-btn" class="control-btn">⏸ PAUSE</button>
+            <button id="restart-btn" class="control-btn">🔄 RESTART</button>
+        </div>
+        <!-- Bottom Cars theme footer -->
+        <div id="theme-footer">
+            <span class="footer-item">🏜️ Ornament Valley</span>
+            <span class="footer-divider">•</span>
+            <span class="footer-item">🛣️ Interstate 40</span>
+            <span class="footer-divider">•</span>
+            <span class="footer-item">⛽ Flo's V8 Café</span>
         </div>
     </div>
 

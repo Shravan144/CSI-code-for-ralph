@@ -1,14 +1,4 @@
-/**
- * ===================================================
- *  Highway Havoc: Save the Town
- *  Grid-based traffic redirection strategy game
- *  Features: Isometric 3D, combos, weather, power-ups,
- *            town growth, screen shake, adaptive AI
- *  Pure HTML/CSS/JS — No frameworks
- * ===================================================
- */
 
-// ==================== CONSTANTS ====================
 const COLS = 10, ROWS = 8, TILE = 72;
 const W = COLS * TILE, H = ROWS * TILE;
 const RIGHT = 0, DOWN = 1, LEFT = 2, UP = 3;
@@ -802,13 +792,13 @@ class Game {
     showLevelBanner() {
         const warnings = [
             '',
-            'Roads will shuffle!',
+            'Route 66 gets busy!',
             'Gates auto-toggle!',
-            'Maximum chaos!',
-            'FINAL LEVEL!'
+            'Radiator Springs needs you!',
+            'PISTON CUP FINALE!'
         ];
-        const sub = this.level <= MAX_LEVEL ? warnings[this.level - 1] : 'YOU WIN!';
-        this.eLevelBanner.innerHTML = `LEVEL ${this.level}<span class="level-sub">${sub}</span>`;
+        const sub = this.level <= MAX_LEVEL ? warnings[this.level - 1] : 'KA-CHOW! YOU WIN!';
+        this.eLevelBanner.innerHTML = `\ud83c\udfc1 LEVEL ${this.level}<span class="level-sub">${sub}</span>`;
         this.eLevelBanner.classList.remove('hidden');
         this.eLevelBanner.style.animation = 'none';
         void this.eLevelBanner.offsetHeight;
@@ -899,11 +889,11 @@ class Game {
         overlay.classList.remove('hidden');
 
         if (won && this.level > MAX_LEVEL) {
-            title.textContent = 'ALL LEVELS COMPLETE!';
+            title.textContent = '\ud83c\udfc6 KA-CHOW! RADIATOR SPRINGS SAVED!';
         } else if (won) {
-            title.textContent = 'TOWN SAVED!';
+            title.textContent = '\ud83c\udfc1 RADIATOR SPRINGS THRIVES!';
         } else {
-            title.textContent = 'TOWN COLLAPSED';
+            title.textContent = '\ud83d\udea7 RADIATOR SPRINGS FADED...';
         }
         title.className = won ? 'win' : 'lose';
 
@@ -973,13 +963,30 @@ class Game {
         const c = this.c;
         c.clearRect(0, 0, W, H);
 
-        // Background
+        // Desert background — warm sand tones
         const isNight = this.weather === WEATHER_NIGHT;
-        c.fillStyle = isNight ? '#151820' : '#1e2a38';
+        if (isNight) {
+            c.fillStyle = '#120a06';
+        } else {
+            const bgGrad = c.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#3a2818');
+            bgGrad.addColorStop(0.3, '#2e1e10');
+            bgGrad.addColorStop(1, '#2a1a0c');
+            c.fillStyle = bgGrad;
+        }
         c.fillRect(0, 0, W, H);
 
-        // Warm glow near town area (stronger when economy high)
-        const glowStrength = 0.06 + (this.townTier * 0.04);
+        // Desert sunset glow at top
+        if (!isNight) {
+            const skyGlow = c.createLinearGradient(0, 0, 0, 100);
+            skyGlow.addColorStop(0, 'rgba(232, 135, 60, 0.08)');
+            skyGlow.addColorStop(1, 'rgba(232, 135, 60, 0)');
+            c.fillStyle = skyGlow;
+            c.fillRect(0, 0, W, 100);
+        }
+
+        // Warm neon glow near Radiator Springs (town area)
+        const glowStrength = 0.08 + (this.townTier * 0.05);
         const tcx = 4.5 * TILE, tcy = 3.5 * TILE;
         const glow = c.createRadialGradient(tcx, tcy, 10, tcx, tcy, TILE * 3.2);
         glow.addColorStop(0, `rgba(210, 155, 60, ${glowStrength})`);
@@ -1002,8 +1009,8 @@ class Game {
             c.strokeRect(hx + 1, hy + 1, TILE - 2, TILE - 2);
         }
 
-        // Subtle grid
-        c.strokeStyle = 'rgba(255,255,255,0.06)';
+        // Subtle grid — desert dusty lines
+        c.strokeStyle = 'rgba(200, 160, 80, 0.05)';
         c.lineWidth = 1;
         for (let r = 0; r <= ROWS; r++) {
             c.beginPath(); c.moveTo(0, r * TILE); c.lineTo(W, r * TILE); c.stroke();
@@ -1011,6 +1018,28 @@ class Game {
         for (let cl = 0; cl <= COLS; cl++) {
             c.beginPath(); c.moveTo(cl * TILE, 0); c.lineTo(cl * TILE, H); c.stroke();
         }
+
+        // === RADIATOR SPRINGS WELCOME SIGN (Route 66 Style) ===
+        // Draw a small "Welcome" sign near the town entrance
+        const signX = 3 * TILE + 6;
+        const signY = 2 * TILE - 8;
+        // Sign post
+        c.fillStyle = 'rgba(100, 70, 35, 0.5)';
+        c.fillRect(signX + 18, signY + 10, 2, 14);
+        // Sign board
+        c.fillStyle = 'rgba(40, 25, 10, 0.7)';
+        c.beginPath(); c.roundRect(signX, signY, 38, 12, 2); c.fill();
+        c.strokeStyle = 'rgba(220, 180, 60, 0.4)';
+        c.lineWidth = 0.5;
+        c.beginPath(); c.roundRect(signX, signY, 38, 12, 2); c.stroke();
+        // Sign text
+        c.fillStyle = 'rgba(72, 216, 176, 0.7)';
+        c.font = 'bold 5px Arial';
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText('WELCOME TO', signX + 19, signY + 4);
+        c.fillStyle = 'rgba(232, 168, 76, 0.8)';
+        c.font = 'bold 5px Arial';
+        c.fillText('R. SPRINGS', signX + 19, signY + 9);
 
         // Draw cars with isometric depth sorting (bottom first)
         const sortedCars = this.cars.filter(c => c.alive).sort((a, b) => a.y - b.y);
@@ -1047,15 +1076,16 @@ class Game {
             c.fillStyle = 'rgba(0, 0, 0, 0.4)';
             c.beginPath(); c.roundRect(barX, barY, barW, barH, 3); c.fill();
 
-            // Fill
+            // Fill — racing flag gradual fill
             const barGrad = c.createLinearGradient(barX, barY, barX + barW * progress, barY);
-            barGrad.addColorStop(0, '#48a068');
-            barGrad.addColorStop(1, '#68d098');
+            barGrad.addColorStop(0, '#d44020');
+            barGrad.addColorStop(0.5, '#e88040');
+            barGrad.addColorStop(1, '#f0c040');
             c.fillStyle = barGrad;
             c.beginPath(); c.roundRect(barX, barY, barW * progress, barH, 3); c.fill();
 
             // Label
-            c.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            c.fillStyle = 'rgba(255, 240, 200, 0.6)';
             c.font = 'bold 8px Segoe UI, Arial';
             c.textAlign = 'left'; c.textBaseline = 'bottom';
             c.fillText(`LV${this.level}: ${this.levelRedirected}/${this.levelConfig.target}`, barX + 2, barY - 2);
@@ -1130,51 +1160,83 @@ class Game {
     }
 
     _drawEmpty(c, x, y) {
-        // Desert ground with subtle variance
+        // Desert sand ground
         const v = ((x * 7 + y * 13) % 20) / 1000;
-        c.fillStyle = `rgba(80, 65, 40, ${0.18 + v})`;
+        const sandGrad = c.createLinearGradient(x, y, x, y + TILE);
+        sandGrad.addColorStop(0, `rgba(180, 140, 80, ${0.12 + v})`);
+        sandGrad.addColorStop(1, `rgba(160, 120, 60, ${0.10 + v})`);
+        c.fillStyle = sandGrad;
         c.fillRect(x, y, TILE, TILE);
-        // Sand dots
-        c.fillStyle = 'rgba(120, 100, 60, 0.12)';
+
+        // Sand texture dots
+        c.fillStyle = 'rgba(200, 160, 80, 0.08)';
         c.fillRect(x + 12, y + 18, 2, 2);
         c.fillRect(x + 48, y + 35, 2, 2);
         c.fillRect(x + 30, y + 55, 1, 1);
+        c.fillRect(x + 55, y + 12, 1, 1);
+
+        // Small cacti and rocks on some tiles (deterministic from position)
+        const hash = (x * 31 + y * 17) % 100;
+        if (hash < 20) {
+            // Small cactus
+            c.fillStyle = 'rgba(80, 120, 50, 0.3)';
+            const cx = x + 20 + (hash % 30);
+            const cy2 = y + 45 + (hash % 15);
+            c.fillRect(cx, cy2 - 12, 3, 12);
+            c.fillRect(cx - 4, cy2 - 8, 3, 5);
+            c.fillRect(cx + 4, cy2 - 6, 3, 4);
+        } else if (hash < 35) {
+            // Small rock
+            c.fillStyle = 'rgba(120, 90, 50, 0.18)';
+            c.beginPath();
+            c.arc(x + 35 + (hash % 20), y + 50, 3 + (hash % 3), 0, Math.PI * 2);
+            c.fill();
+        }
     }
 
     _drawHighway(c, x, y, cx, cy, kind) {
-        // Asphalt base
-        c.fillStyle = '#222e40';
+        // Asphalt base — warm desert asphalt
+        c.fillStyle = '#2a2018';
         c.fillRect(x, y, TILE, TILE);
 
-        // Road surface with subtle 3D bevel
+        // Road surface with hot asphalt gradient
         const roadGrad = c.createLinearGradient(x, cy - 15, x, cy + 15);
-        roadGrad.addColorStop(0, '#485060');
-        roadGrad.addColorStop(0.4, '#3c4454');
-        roadGrad.addColorStop(1, '#343c4c');
+        roadGrad.addColorStop(0, '#504840');
+        roadGrad.addColorStop(0.4, '#403830');
+        roadGrad.addColorStop(1, '#383028');
         c.fillStyle = roadGrad;
         c.fillRect(x + 1, cy - 15, TILE - 2, 30);
 
-        // Edge lines
-        c.strokeStyle = 'rgba(200, 210, 230, 0.3)';
-        c.lineWidth = 1;
+        // Edge lines — faded yellow (Route 66 style)
+        c.strokeStyle = 'rgba(220, 180, 60, 0.25)';
+        c.lineWidth = 1.5;
         c.beginPath(); c.moveTo(x, cy - 15); c.lineTo(x + TILE, cy - 15); c.stroke();
         c.beginPath(); c.moveTo(x, cy + 15); c.lineTo(x + TILE, cy + 15); c.stroke();
 
-        // Center dashes
-        c.strokeStyle = 'rgba(220, 220, 230, 0.2)';
+        // Center dashes — white
+        c.strokeStyle = 'rgba(255, 255, 240, 0.25)';
         c.lineWidth = 1;
         c.setLineDash([7, 9]);
         c.beginPath(); c.moveTo(x + 4, cy); c.lineTo(x + TILE - 4, cy); c.stroke();
         c.setLineDash([]);
 
+        // Route 66 '66' shield on some highway tiles
+        const hHash = (x * 3 + y * 7) % 100;
+        if (hHash < 15 && kind === HIGHWAY) {
+            c.fillStyle = 'rgba(255, 255, 240, 0.12)';
+            c.font = 'bold 8px Arial';
+            c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.fillText('66', cx, cy - 20);
+        }
+
         if (kind === SPAWN) {
-            c.fillStyle = '#70b8d0';
+            c.fillStyle = '#e88040';
             c.font = 'bold 15px Arial';
             c.textAlign = 'center'; c.textBaseline = 'middle';
             c.fillText('\u25b6', cx, cy);
         }
         if (kind === EXIT) {
-            c.fillStyle = '#a8c870';
+            c.fillStyle = '#c8d070';
             c.font = 'bold 12px Arial';
             c.textAlign = 'center'; c.textBaseline = 'middle';
             c.fillText('EXIT', cx, cy);
@@ -1183,31 +1245,31 @@ class Game {
 
     _drawRoad(c, x, y, cx, cy, cell) {
         const flash = cell.flashTimer > 0;
-        c.fillStyle = flash ? 'rgba(100, 90, 50, 0.4)' : 'rgba(40, 38, 50, 0.5)';
+        c.fillStyle = flash ? 'rgba(120, 100, 50, 0.4)' : 'rgba(50, 38, 24, 0.5)';
         c.fillRect(x, y, TILE, TILE);
 
         const dir = cell.dir;
         const pad = 8;
 
-        // Road surface with 3D depth
+        // Road surface — dusty desert road
         if (dir === RIGHT || dir === LEFT) {
             const rg = c.createLinearGradient(x, cy - 12, x, cy + 12);
-            rg.addColorStop(0, '#4a5060');
-            rg.addColorStop(1, '#3a404c');
+            rg.addColorStop(0, '#504838');
+            rg.addColorStop(1, '#403428');
             c.fillStyle = rg;
             c.fillRect(x + pad, cy - 12, TILE - pad * 2, 24);
-            c.strokeStyle = 'rgba(200, 180, 120, 0.18)';
+            c.strokeStyle = 'rgba(220, 180, 80, 0.15)';
             c.lineWidth = 1;
             c.setLineDash([4, 6]);
             c.beginPath(); c.moveTo(x + pad, cy); c.lineTo(x + TILE - pad, cy); c.stroke();
             c.setLineDash([]);
         } else {
             const rg = c.createLinearGradient(cx - 12, y, cx + 12, y);
-            rg.addColorStop(0, '#4a5060');
-            rg.addColorStop(1, '#3a404c');
+            rg.addColorStop(0, '#504838');
+            rg.addColorStop(1, '#403428');
             c.fillStyle = rg;
             c.fillRect(cx - 12, y + pad, 24, TILE - pad * 2);
-            c.strokeStyle = 'rgba(200, 180, 120, 0.18)';
+            c.strokeStyle = 'rgba(220, 180, 80, 0.15)';
             c.lineWidth = 1;
             c.setLineDash([4, 6]);
             c.beginPath(); c.moveTo(cx, y + pad); c.lineTo(cx, y + TILE - pad); c.stroke();
@@ -1242,71 +1304,111 @@ class Game {
     _drawTown(c, x, y, cx, cy, cell) {
         const tier = this.townTier;
 
-        // Background warmth based on town tier
-        const baseBright = [0.25, 0.35, 0.45][tier];
+        // Radiator Springs — warm desert town ambience
+        const baseBright = [0.20, 0.30, 0.42][tier];
         const pulse = Math.sin(this.frame * 0.025) * 0.03 + baseBright;
-        c.fillStyle = `rgba(200, 145, 55, ${pulse})`;
+        c.fillStyle = `rgba(180, 120, 50, ${pulse})`;
         c.fillRect(x, y, TILE, TILE);
 
-        // Buildings grow with tier
-        const bColor = ['rgba(130, 100, 50, 0.5)', 'rgba(170, 130, 60, 0.55)', 'rgba(200, 155, 70, 0.65)'][tier];
-        c.fillStyle = bColor;
+        // Sandy ground texture
+        c.fillStyle = 'rgba(200, 160, 80, 0.06)';
+        c.fillRect(x + 5, y + 40, TILE - 10, TILE - 42);
 
-        // Building 1
+        // Buildings — Radiator Springs style (adobe/southwestern)
+        const bColors = [
+            ['rgba(160, 90, 50, 0.5)', 'rgba(120, 80, 40, 0.4)'],    // tier 0 — quiet
+            ['rgba(190, 110, 55, 0.55)', 'rgba(140, 90, 50, 0.5)'],   // tier 1 — busy
+            ['rgba(210, 130, 60, 0.65)', 'rgba(160, 100, 55, 0.6)']   // tier 2 — thriving
+        ][tier];
+
+        // Building 1 — Flo's V8 Café style
         const b1h = [20, 26, 32][tier];
-        c.fillRect(x + 10, y + 36 - b1h, 20, b1h);
+        c.fillStyle = bColors[0];
+        c.fillRect(x + 8, y + 36 - b1h, 22, b1h);
+        // Awning
+        c.fillStyle = 'rgba(200, 60, 30, 0.35)';
+        c.fillRect(x + 6, y + 36 - b1h - 3, 26, 3);
 
-        // Building 2
-        const b2h = [14, 18, 24][tier];
-        c.fillRect(x + 38, y + 36 - b2h, 16, b2h);
+        // Building 2 — Ramone's style
+        const b2h = [14, 20, 26][tier];
+        c.fillStyle = bColors[1];
+        c.fillRect(x + 38, y + 36 - b2h, 18, b2h);
 
-        // Building 3 (only tier 1+)
+        // Building 3 — tier 1+ (Sarge's surplus style)
         if (tier >= 1) {
+            c.fillStyle = 'rgba(80, 100, 60, 0.4)';
             c.fillRect(x + 14, y + 44, 25, 14);
         }
 
-        // Windows (more lit = better economy)
-        const windowBright = [0.5, 0.7, 0.95][tier];
-        c.fillStyle = `rgba(255, 230, 140, ${windowBright})`;
-        c.fillRect(x + 13, y + 36 - b1h + 4, 3, 3);
+        // Neon sign glow (stronger at higher tiers)
+        if (tier >= 1) {
+            const neonPulse = 0.15 + Math.sin(this.frame * 0.06) * 0.08;
+            // Neon glow behind buildings
+            c.shadowBlur = 8;
+            c.shadowColor = `rgba(72, 216, 176, ${neonPulse})`;
+            c.fillStyle = `rgba(72, 216, 176, ${neonPulse * 0.5})`;
+            c.fillRect(x + 10, y + 36 - b1h - 6, 18, 3);
+            c.shadowBlur = 0;
+        }
+        if (tier === 2) {
+            const neonPulse2 = 0.12 + Math.sin(this.frame * 0.04 + 1) * 0.06;
+            c.shadowBlur = 6;
+            c.shadowColor = `rgba(232, 80, 40, ${neonPulse2})`;
+            c.fillStyle = `rgba(232, 80, 40, ${neonPulse2 * 0.5})`;
+            c.fillRect(x + 40, y + 36 - b2h - 6, 14, 3);
+            c.shadowBlur = 0;
+        }
+
+        // Window lights — warm yellow (lit when economy is good)
+        const windowBright = [0.4, 0.65, 0.95][tier];
+        c.fillStyle = `rgba(255, 220, 120, ${windowBright})`;
+        c.fillRect(x + 11, y + 36 - b1h + 4, 3, 3);
         c.fillRect(x + 21, y + 36 - b1h + 4, 3, 3);
         if (b1h > 20) {
-            c.fillRect(x + 13, y + 36 - b1h + 12, 3, 3);
+            c.fillRect(x + 11, y + 36 - b1h + 12, 3, 3);
             c.fillRect(x + 21, y + 36 - b1h + 12, 3, 3);
         }
         c.fillRect(x + 41, y + 36 - b2h + 4, 3, 3);
+        c.fillRect(x + 49, y + 36 - b2h + 4, 3, 3);
         if (tier >= 1) {
             c.fillRect(x + 17, y + 48, 3, 3);
             c.fillRect(x + 28, y + 48, 3, 3);
         }
 
-        // Road intersection
-        c.fillStyle = 'rgba(55, 52, 65, 0.55)';
+        // Road intersection — dusty Route 66 spur
+        c.fillStyle = 'rgba(60, 45, 25, 0.55)';
         c.fillRect(x, cy - 10, TILE, 20);
         c.fillRect(cx - 10, y, 20, TILE);
 
-        // Border
-        const borderAlpha = [0.3, 0.4, 0.55][tier];
-        c.strokeStyle = `rgba(200, 160, 70, ${borderAlpha})`;
+        // Border — warm glow
+        const borderAlpha = [0.25, 0.38, 0.55][tier];
+        c.strokeStyle = `rgba(220, 160, 50, ${borderAlpha})`;
         c.lineWidth = 1;
         c.strokeRect(x + 1, y + 1, TILE - 2, TILE - 2);
 
-        // Tier 2 prosperity glow
+        // Tier 2 prosperity glow — neon-lit town
         if (tier === 2) {
-            const pg = c.createRadialGradient(cx, cy, 5, cx, cy, TILE * 0.6);
-            pg.addColorStop(0, 'rgba(220, 180, 60, 0.06)');
+            const pg = c.createRadialGradient(cx, cy, 5, cx, cy, TILE * 0.65);
+            pg.addColorStop(0, 'rgba(72, 216, 176, 0.05)');
+            pg.addColorStop(0.5, 'rgba(232, 168, 76, 0.04)');
             pg.addColorStop(1, 'rgba(220, 180, 60, 0)');
             c.fillStyle = pg;
             c.fillRect(x, y, TILE, TILE);
         }
 
-        // Label
+        // Label — "RADIATOR SPRINGS" on center town tile
         if (cell.row === 3 && cell.col === 4) {
-            const labels = ['TOWN', 'TOWN', 'CITY'];
-            c.fillStyle = `rgba(230, 200, 110, ${0.6 + tier * 0.15})`;
-            c.font = 'bold 9px Segoe UI, Arial';
+            const labels = ['R. SPRINGS', 'RADIATOR\nSPRINGS', '\u2b50 RADIATOR\nSPRINGS'];
+            c.fillStyle = `rgba(72, 216, 176, ${0.55 + tier * 0.18})`;
+            c.font = 'bold 7px Segoe UI, Arial';
             c.textAlign = 'center'; c.textBaseline = 'middle';
-            c.fillText(labels[tier], cx, y + 7);
+            if (tier >= 1) {
+                c.shadowBlur = 4;
+                c.shadowColor = 'rgba(72, 216, 176, 0.4)';
+            }
+            c.fillText(tier < 1 ? 'R. SPRINGS' : 'RADIATOR', cx, y + 5);
+            if (tier >= 1) c.fillText('SPRINGS', cx, y + 13);
+            c.shadowBlur = 0;
         }
     }
 
@@ -1368,215 +1470,290 @@ class Game {
         const face = car.face;
         const hw = isTruck ? 26 : (style === 'fiat' ? 16 : 20);
         const hh = isTruck ? 15 : (style === 'fiat' ? 11 : 13);
+        const clr = car.color;
+        const acc = car.accent;
 
-        // ── Ground shadow ──
-        c.fillStyle = 'rgba(0,0,0,0.22)';
-        c.beginPath();
-        c.ellipse(1, hh + 5, hw - 2, 6, 0, 0, 6.28);
-        c.fill();
+        // ═══════════════════════════════════════
+        //  LAYER 0 — GROUND SHADOW (multi-layer)
+        // ═══════════════════════════════════════
+        c.fillStyle = 'rgba(0,0,0,0.12)';
+        c.beginPath(); c.ellipse(2, hh + 7, hw + 4, 8, 0, 0, 6.28); c.fill();
+        c.fillStyle = 'rgba(0,0,0,0.20)';
+        c.beginPath(); c.ellipse(1, hh + 5, hw, 5, 0, 0, 6.28); c.fill();
 
-        // ── CHARACTER-SPECIFIC BODY SHAPES ──
+        // ═══════════════════════════════════════
+        //  LAYER 1 — UNDERCARRIAGE (3D depth)
+        // ═══════════════════════════════════════
+        c.fillStyle = this._darkenColor(clr, 80);
+        c.beginPath(); c.roundRect(-hw + 1, -hh + 2, hw * 2 - 2, hh * 2 - 2, 3); c.fill();
+
+        // ═══════════════════════════════════════
+        //  LAYER 2 — WHEELS (with rubber + hubcaps)
+        // ═══════════════════════════════════════
+        const wheelPositions = isTruck
+            ? [[-hw + 5, -hh - 1], [-hw + 5, hh + 1], [hw - 7, -hh - 1], [hw - 7, hh + 1]]
+            : [[-hw + 5, -hh - 1], [-hw + 5, hh + 1], [hw - 6, -hh - 1], [hw - 6, hh + 1]];
+        for (const [wx, wy] of wheelPositions) {
+            // Tire
+            c.fillStyle = '#1a1a1a';
+            c.beginPath(); c.roundRect(wx - 4, wy - 2, 8, 4, 2); c.fill();
+            // Tire tread highlight
+            c.fillStyle = '#2a2a2a';
+            c.beginPath(); c.roundRect(wx - 3, wy - 1.5, 6, 3, 1.5); c.fill();
+            // Hubcap
+            const hubGrad = c.createRadialGradient(wx, wy, 0, wx, wy, 2.5);
+            hubGrad.addColorStop(0, '#e0e0e0');
+            hubGrad.addColorStop(0.5, '#a0a0a8');
+            hubGrad.addColorStop(1, '#606068');
+            c.fillStyle = hubGrad;
+            c.beginPath(); c.ellipse(wx, wy, 2, 1.8, 0, 0, 6.28); c.fill();
+        }
+
+        // ═══════════════════════════════════════
+        //  LAYER 3 — CAR BODY (character-specific)
+        // ═══════════════════════════════════════
+        const _bodyShape = (cornerRadii) => {
+            // Multi-stop gradient for metallic paint
+            const bg = c.createLinearGradient(-hw, -hh - 2, -hw, hh + 2);
+            bg.addColorStop(0, this._lightenColor(clr, 65));
+            bg.addColorStop(0.15, this._lightenColor(clr, 35));
+            bg.addColorStop(0.4, clr);
+            bg.addColorStop(0.7, this._darkenColor(clr, 30));
+            bg.addColorStop(1, this._darkenColor(clr, 65));
+            c.fillStyle = bg;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, cornerRadii); c.fill();
+        };
+
         if (style === 'truck') {
-            // MATER — rusty tow truck with flat bed
-            const bedGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bedGrad.addColorStop(0, this._lightenColor(car.color, 10));
-            bedGrad.addColorStop(1, this._darkenColor(car.color, 30));
-            c.fillStyle = bedGrad;
+            // MATER — flat bed + cab
+            const bedG = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bedG.addColorStop(0, this._lightenColor(clr, 15));
+            bedG.addColorStop(0.5, this._darkenColor(clr, 10));
+            bedG.addColorStop(1, this._darkenColor(clr, 45));
+            c.fillStyle = bedG;
             c.beginPath(); c.roundRect(-hw, -hh + 2, hw * 0.85, hh * 2 - 4, 2); c.fill();
-            // Rust spots
-            c.fillStyle = 'rgba(90, 50, 20, 0.35)';
-            c.beginPath(); c.arc(-hw + 8, -4, 3, 0, 6.28); c.fill();
-            c.beginPath(); c.arc(-hw + 14, 5, 2.5, 0, 6.28); c.fill();
-            // Tow hook
-            c.strokeStyle = '#555';
-            c.lineWidth = 2;
+            // Bed planks
+            c.strokeStyle = this._darkenColor(clr, 55);
+            c.lineWidth = 0.5;
+            for (let i = 0; i < 4; i++) {
+                const rx = -hw + 4 + i * 5;
+                c.beginPath(); c.moveTo(rx, -hh + 4); c.lineTo(rx, hh - 4); c.stroke();
+            }
+            // Rust patches (layered)
+            c.fillStyle = 'rgba(120, 60, 20, 0.25)';
+            c.beginPath(); c.ellipse(-hw + 9, -3, 4, 3, 0.3, 0, 6.28); c.fill();
+            c.fillStyle = 'rgba(80, 40, 10, 0.3)';
+            c.beginPath(); c.ellipse(-hw + 15, 5, 3, 2, -0.2, 0, 6.28); c.fill();
+            // Tow hook (metallic)
+            const hookG = c.createLinearGradient(-hw - 10, -2, -hw - 10, 10);
+            hookG.addColorStop(0, '#888'); hookG.addColorStop(1, '#444');
+            c.strokeStyle = hookG; c.lineWidth = 2.5;
             c.beginPath();
-            c.moveTo(-hw + 2, 0);
-            c.lineTo(-hw - 8, 0);
-            c.arc(-hw - 8, 4, 4, -Math.PI / 2, Math.PI * 0.7);
+            c.moveTo(-hw + 2, 0); c.lineTo(-hw - 7, 0);
+            c.arc(-hw - 7, 5, 5, -Math.PI / 2, Math.PI * 0.7);
             c.stroke();
-            // Cab
-            const cabGrad = c.createLinearGradient(-hw * 0.15, -hh, -hw * 0.15, hh);
-            cabGrad.addColorStop(0, this._lightenColor(car.color, 30));
-            cabGrad.addColorStop(0.4, car.color);
-            cabGrad.addColorStop(1, this._darkenColor(car.color, 40));
-            c.fillStyle = cabGrad;
+            // Cab (metallic gradient)
+            const cabG = c.createLinearGradient(-hw * 0.15, -hh - 2, -hw * 0.15, hh + 2);
+            cabG.addColorStop(0, this._lightenColor(clr, 50));
+            cabG.addColorStop(0.2, this._lightenColor(clr, 25));
+            cabG.addColorStop(0.5, clr);
+            cabG.addColorStop(1, this._darkenColor(clr, 50));
+            c.fillStyle = cabG;
             c.beginPath(); c.roundRect(-hw * 0.15, -hh, hw * 1.15, hh * 2, 5); c.fill();
         } else if (style === 'van') {
-            // FILLMORE — VW bus style, boxy tall
-            const vanGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            vanGrad.addColorStop(0, this._lightenColor(car.color, 25));
-            vanGrad.addColorStop(0.5, car.color);
-            vanGrad.addColorStop(1, this._darkenColor(car.color, 35));
-            c.fillStyle = vanGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [4, 8, 8, 4]); c.fill();
-            // Hippie stripe
-            c.fillStyle = car.accent;
-            c.globalAlpha = 0.35;
-            c.beginPath(); c.roundRect(-hw + 2, -2, hw * 2 - 4, 4, 2); c.fill();
+            _bodyShape([4, 8, 8, 4]);
+            // Hippie two-tone paint
+            c.fillStyle = this._lightenColor(clr, 25);
+            c.globalAlpha = 0.25;
+            c.beginPath(); c.roundRect(-hw + 1, -hh, hw * 2 - 2, hh, [4, 4, 0, 0]); c.fill();
             c.globalAlpha = 1;
-            // Peace symbol (small)
-            c.strokeStyle = car.accent;
-            c.lineWidth = 1;
-            c.beginPath(); c.arc(-hw / 2, 0, 4, 0, 6.28); c.stroke();
-            c.beginPath(); c.moveTo(-hw / 2, -4); c.lineTo(-hw / 2, 4); c.stroke();
-            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 - 2.8, 2.8); c.stroke();
-            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 + 2.8, 2.8); c.stroke();
+            // Accent stripe
+            c.fillStyle = acc;
+            c.globalAlpha = 0.4;
+            c.beginPath(); c.roundRect(-hw + 3, -1.5, hw * 2 - 6, 3, 1.5); c.fill();
+            c.globalAlpha = 1;
+            // Peace symbol
+            c.strokeStyle = acc; c.lineWidth = 1.2; c.globalAlpha = 0.6;
+            c.beginPath(); c.arc(-hw / 2, 0, 5, 0, 6.28); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, -5); c.lineTo(-hw / 2, 5); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 - 3.5, 3.5); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 + 3.5, 3.5); c.stroke();
+            c.globalAlpha = 1;
         } else if (style === 'racer') {
-            // MCQUEEN / CHICK — sleek low-slung racer with spoiler
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 40));
-            bodyGrad.addColorStop(0.3, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 50));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [6, 14, 14, 6]); c.fill();
-            // Rear spoiler
-            c.fillStyle = this._darkenColor(car.color, 30);
-            c.beginPath();
-            c.roundRect(-hw - 2, -hh - 3, 5, hh * 2 + 6, 1);
-            c.fill();
-            // Racing stripe
+            _bodyShape([6, 14, 14, 6]);
+            // Rear spoiler (3D)
+            const spG = c.createLinearGradient(-hw - 3, 0, -hw + 3, 0);
+            spG.addColorStop(0, this._darkenColor(clr, 50));
+            spG.addColorStop(0.5, this._darkenColor(clr, 20));
+            spG.addColorStop(1, this._darkenColor(clr, 60));
+            c.fillStyle = spG;
+            c.beginPath(); c.roundRect(-hw - 3, -hh - 3, 6, hh * 2 + 6, 1); c.fill();
+            // Spoiler struts
+            c.strokeStyle = this._darkenColor(clr, 70); c.lineWidth = 1;
+            c.beginPath(); c.moveTo(-hw, -hh + 3); c.lineTo(-hw - 2, -hh - 2); c.stroke();
+            c.beginPath(); c.moveTo(-hw, hh - 3); c.lineTo(-hw - 2, hh + 2); c.stroke();
             if (car.charName === 'McQueen') {
-                // Lightning bolt decal
+                // Lightning bolt
                 c.fillStyle = '#f5c518';
+                c.shadowColor = 'rgba(245, 197, 24, 0.4)';
+                c.shadowBlur = 6;
                 c.beginPath();
                 c.moveTo(-8, -hh + 2); c.lineTo(4, -4); c.lineTo(0, -3);
                 c.lineTo(8, hh - 2); c.lineTo(-4, 4); c.lineTo(0, 3);
                 c.closePath(); c.fill();
+                c.shadowBlur = 0;
+                // "95" with outline
+                c.font = 'bold 9px Arial';
+                c.textAlign = 'center'; c.textBaseline = 'middle';
+                c.strokeStyle = '#c41010'; c.lineWidth = 2;
+                c.strokeText('95', -hw / 2 + 1, 0);
+                c.fillStyle = '#fff';
+                c.fillText('95', -hw / 2 + 1, 0);
             }
             if (car.charName === 'Chick') {
-                // Chick Hicks "thunder" stripes
-                c.fillStyle = car.accent;
-                c.globalAlpha = 0.5;
-                c.beginPath(); c.roundRect(-6, -hh + 1, 12, 3, 1); c.fill();
-                c.beginPath(); c.roundRect(-6, hh - 4, 12, 3, 1); c.fill();
+                c.fillStyle = acc; c.globalAlpha = 0.5;
+                c.beginPath(); c.roundRect(-8, -hh + 1, 16, 3, 1); c.fill();
+                c.beginPath(); c.roundRect(-8, hh - 4, 16, 3, 1); c.fill();
                 c.globalAlpha = 1;
+                c.font = 'bold 8px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle';
+                c.strokeStyle = this._darkenColor(clr, 60); c.lineWidth = 1.5;
+                c.strokeText('86', -hw / 2 + 1, 0);
+                c.fillStyle = '#fff'; c.fillText('86', -hw / 2 + 1, 0);
             }
         } else if (style === 'porsche') {
-            // SALLY — curvy Porsche shape, smooth contours
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 45));
-            bodyGrad.addColorStop(0.35, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 45));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [10, 16, 16, 10]); c.fill();
-            // Pinstripe accent
-            c.strokeStyle = car.accent;
-            c.lineWidth = 0.8;
-            c.globalAlpha = 0.5;
-            c.beginPath();
-            c.moveTo(-hw + 5, -hh + hh); c.lineTo(hw - 5, -hh + hh);
-            c.stroke();
+            _bodyShape([10, 16, 16, 10]);
+            // Tattoo pinstripe
+            c.strokeStyle = acc; c.lineWidth = 1; c.globalAlpha = 0.3;
+            c.beginPath(); c.moveTo(-hw + 6, 0); c.lineTo(hw - 6, 0); c.stroke();
             c.globalAlpha = 1;
         } else if (style === 'hudson') {
-            // DOC HUDSON — classic boxy vintage shape
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 30));
-            bodyGrad.addColorStop(0.4, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [4, 6, 6, 4]); c.fill();
-            // Chrome trim lines
-            c.strokeStyle = '#a0b0c0';
-            c.lineWidth = 0.8;
+            _bodyShape([4, 6, 6, 4]);
+            // Chrome trim lines (shiny)
+            const chromeG = c.createLinearGradient(-hw, 0, hw, 0);
+            chromeG.addColorStop(0, '#708090'); chromeG.addColorStop(0.5, '#d0d8e0');
+            chromeG.addColorStop(1, '#708090');
+            c.strokeStyle = chromeG; c.lineWidth = 1;
             c.beginPath(); c.moveTo(-hw + 3, -hh + 5); c.lineTo(hw - 8, -hh + 5); c.stroke();
             c.beginPath(); c.moveTo(-hw + 3, hh - 5); c.lineTo(hw - 8, hh - 5); c.stroke();
+            // "51" with Doc's blue styling
+            c.font = 'bold 8px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.fillStyle = '#6090c0'; c.globalAlpha = 0.7;
+            c.fillText('51', -hw / 2 + 2, 0);
+            c.globalAlpha = 1;
         } else if (style === 'fiat') {
-            // LUIGI — tiny round Fiat 500
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 40));
-            bodyGrad.addColorStop(0.4, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 10); c.fill();
+            _bodyShape(10);
         } else if (style === 'lowrider') {
-            // RAMONE — low wide body with flame accents
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 30));
-            bodyGrad.addColorStop(0.35, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 55));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [5, 10, 10, 5]); c.fill();
-            // Flame accents on sides
-            c.fillStyle = car.accent;
-            c.globalAlpha = 0.6;
-            for (let i = 0; i < 3; i++) {
-                const fx = -hw + 6 + i * 8;
+            _bodyShape([5, 10, 10, 5]);
+            // Flamed sides (metallic)
+            c.globalAlpha = 0.55;
+            for (let i = 0; i < 4; i++) {
+                const fx = -hw + 5 + i * 7;
+                const fG = c.createLinearGradient(fx, -hh, fx, -hh + 8);
+                fG.addColorStop(0, '#ff4400'); fG.addColorStop(1, acc);
+                c.fillStyle = fG;
                 c.beginPath();
-                c.moveTo(fx, -hh + 2); c.lineTo(fx + 3, -hh + 6); c.lineTo(fx + 6, -hh + 2);
+                c.moveTo(fx, -hh + 2); c.quadraticCurveTo(fx + 3, -hh + 7, fx + 5, -hh + 2);
                 c.fill();
                 c.beginPath();
-                c.moveTo(fx, hh - 2); c.lineTo(fx + 3, hh - 6); c.lineTo(fx + 6, hh - 2);
+                c.moveTo(fx, hh - 2); c.quadraticCurveTo(fx + 3, hh - 7, fx + 5, hh - 2);
                 c.fill();
             }
             c.globalAlpha = 1;
         } else if (style === 'cruiser') {
-            // SHERIFF — police cruiser with light bar
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 25));
-            bodyGrad.addColorStop(0.4, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [5, 8, 8, 5]); c.fill();
-            // Light bar on top
+            _bodyShape([5, 8, 8, 5]);
+            // Light bar (3D with glow)
             const flash = Math.sin(Date.now() * 0.008) > 0;
-            c.fillStyle = flash ? '#ff2020' : '#2040ff';
-            c.beginPath(); c.roundRect(-3, -hh - 3, 3, 3, 1); c.fill();
-            c.fillStyle = flash ? '#2040ff' : '#ff2020';
-            c.beginPath(); c.roundRect(1, -hh - 3, 3, 3, 1); c.fill();
-            // Badge
-            c.fillStyle = car.accent;
-            c.beginPath(); c.arc(-hw / 2, 0, 3, 0, 6.28); c.fill();
+            c.shadowBlur = 8;
+            c.shadowColor = flash ? 'rgba(255,0,0,0.5)' : 'rgba(0,80,255,0.5)';
+            c.fillStyle = flash ? '#ff3030' : '#3060ff';
+            c.beginPath(); c.roundRect(-4, -hh - 4, 4, 4, 1); c.fill();
+            c.shadowColor = flash ? 'rgba(0,80,255,0.5)' : 'rgba(255,0,0,0.5)';
+            c.fillStyle = flash ? '#3060ff' : '#ff3030';
+            c.beginPath(); c.roundRect(1, -hh - 4, 4, 4, 1); c.fill();
+            c.shadowBlur = 0;
+            // Star badge
+            c.fillStyle = '#d4af37';
+            this._drawStar(c, -hw / 2, 0, 4, 5);
         } else if (style === 'showcar') {
-            // FLO — retro show car with curves
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 35));
-            bodyGrad.addColorStop(0.35, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 45));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [8, 12, 12, 8]); c.fill();
-            // Chrome bumper highlight
-            c.fillStyle = 'rgba(255,255,255,0.15)';
-            c.beginPath(); c.roundRect(hw - 5, -hh + 3, 4, hh * 2 - 6, 2); c.fill();
+            _bodyShape([8, 12, 12, 8]);
+            // Chrome bumper with reflection
+            const bumperG = c.createLinearGradient(hw - 5, -hh, hw - 5, hh);
+            bumperG.addColorStop(0, '#e8e8f0'); bumperG.addColorStop(0.5, '#a0a0b0');
+            bumperG.addColorStop(1, '#e8e8f0');
+            c.fillStyle = bumperG;
+            c.beginPath(); c.roundRect(hw - 4, -hh + 3, 3, hh * 2 - 6, 1.5); c.fill();
         } else {
-            // Generic fallback body
-            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            bodyGrad.addColorStop(0, this._lightenColor(car.color, 35));
-            bodyGrad.addColorStop(0.35, car.color);
-            bodyGrad.addColorStop(1, this._darkenColor(car.color, 50));
-            c.fillStyle = bodyGrad;
-            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 5); c.fill();
+            _bodyShape(5);
         }
 
-        // ── Body outline ──
-        c.strokeStyle = this._darkenColor(car.color, 60);
-        c.lineWidth = 0.8;
+        // ═══════════════════════════════════════
+        //  LAYER 4 — BODY OUTLINE + 3D EDGE
+        // ═══════════════════════════════════════
+        // Bottom edge (dark = depth)
+        c.strokeStyle = this._darkenColor(clr, 75);
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(-hw + 5, hh); c.lineTo(hw - 5, hh);
+        c.stroke();
+        // Top edge (light = highlight)
+        c.strokeStyle = this._lightenColor(clr, 50);
+        c.lineWidth = 0.5;
+        c.beginPath();
+        c.moveTo(-hw + 5, -hh + 0.5); c.lineTo(hw - 5, -hh + 0.5);
+        c.stroke();
+        // Outline
+        c.strokeStyle = this._darkenColor(clr, 55);
+        c.lineWidth = 0.7;
         c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 5); c.stroke();
 
-        // ── Top shine strip ──
-        c.fillStyle = 'rgba(255,255,255,0.10)';
-        c.beginPath(); c.roundRect(-hw + 4, -hh + 1, hw * 2 - 8, 3, 2); c.fill();
+        // ═══════════════════════════════════════
+        //  LAYER 5 — SPECULAR HIGHLIGHT (gloss)
+        // ═══════════════════════════════════════
+        // Top body shine (curved highlight like car paint)
+        const shineG = c.createLinearGradient(-hw, -hh, -hw, -hh + hh * 0.6);
+        shineG.addColorStop(0, 'rgba(255,255,255,0.28)');
+        shineG.addColorStop(0.4, 'rgba(255,255,255,0.08)');
+        shineG.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = shineG;
+        c.beginPath(); c.roundRect(-hw + 2, -hh + 1, hw * 2 - 4, hh * 0.7, [4, 4, 0, 0]); c.fill();
 
-        // ── Decal number ──
-        if (car.decal && car.decal !== 'tow' && car.decal !== 'vw') {
-            c.save();
-            c.fillStyle = '#fff';
-            c.font = 'bold 8px Arial';
-            c.textAlign = 'center'; c.textBaseline = 'middle';
-            c.globalAlpha = 0.7;
-            c.fillText(car.decal, -hw / 2 + 2, 0);
-            c.restore();
-        }
-
-        // ── Windshield (eyes live here) ──
-        const wsLeft = hw - 13;
-        c.fillStyle = 'rgba(180, 220, 250, 0.35)';
+        // Glint line (the thin sharp highlight on polished cars)
+        c.strokeStyle = 'rgba(255,255,255,0.30)';
+        c.lineWidth = 1;
         c.beginPath();
-        c.roundRect(wsLeft, -hh + 2, 11, hh * 2 - 4, [2, 3, 3, 2]);
-        c.fill();
+        c.moveTo(-hw + 6, -hh + 3);
+        c.quadraticCurveTo(0, -hh + 2, hw - 6, -hh + 3);
+        c.stroke();
 
-        // ── EYES ──
-        const eyeX = hw - 7;
+        // ═══════════════════════════════════════
+        //  LAYER 6 — WINDSHIELD (glossy glass)
+        // ═══════════════════════════════════════
+        const wsLeft = hw - 14;
+        const wsW = 12;
+        const wsH = hh * 2 - 4;
+        // Glass gradient
+        const glassG = c.createLinearGradient(wsLeft, -hh, wsLeft + wsW, hh);
+        glassG.addColorStop(0, 'rgba(140, 190, 240, 0.5)');
+        glassG.addColorStop(0.4, 'rgba(100, 160, 220, 0.3)');
+        glassG.addColorStop(1, 'rgba(80, 130, 190, 0.45)');
+        c.fillStyle = glassG;
+        c.beginPath(); c.roundRect(wsLeft, -hh + 2, wsW, wsH, [2, 4, 4, 2]); c.fill();
+        // Glass reflection streak
+        c.strokeStyle = 'rgba(255,255,255,0.35)';
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(wsLeft + 2, -hh + 4);
+        c.quadraticCurveTo(wsLeft + wsW / 2, -hh + 3, wsLeft + wsW - 2, -hh + 5);
+        c.stroke();
+        // Glass edge (frame)
+        c.strokeStyle = this._darkenColor(clr, 40);
+        c.lineWidth = 0.7;
+        c.beginPath(); c.roundRect(wsLeft, -hh + 2, wsW, wsH, [2, 4, 4, 2]); c.stroke();
+
+        // ═══════════════════════════════════════
+        //  LAYER 7 — EYES (3D with depth)
+        // ═══════════════════════════════════════
+        const eyeX = hw - 8;
         const eyeSpacing = style === 'fiat' ? 5 : 6;
         const eyeTopY = -eyeSpacing / 2 - 0.5;
         const eyeBotY = eyeSpacing / 2 - 0.5;
@@ -1584,90 +1761,168 @@ class Game {
         const eyeBaseH = 6 + face.eyeH;
         const eyeH = car.blinking > 0 ? 1.2 : eyeBaseH;
 
-        // Eye whites
-        c.fillStyle = '#f0f0f0';
-        c.beginPath(); c.ellipse(eyeX, eyeTopY, eyeW / 2, eyeH / 2, 0, 0, 6.28); c.fill();
-        c.beginPath(); c.ellipse(eyeX, eyeBotY, eyeW / 2, eyeH / 2, 0, 0, 6.28); c.fill();
-
-        // Pupils
+        // Eye sockets (subtle shadow around eyes)
         if (car.blinking <= 0) {
-            const pupilSize = 2.2;
-            // Character-specific pupil color (Doc has blue, Mater green-ish)
-            c.fillStyle = '#1a1a2a';
-            c.beginPath(); c.arc(eyeX + 0.8, eyeTopY, pupilSize, 0, 6.28); c.fill();
-            c.beginPath(); c.arc(eyeX + 0.8, eyeBotY, pupilSize, 0, 6.28); c.fill();
-
-            // Highlight
-            c.fillStyle = '#fff';
-            c.beginPath(); c.arc(eyeX + 1.6, eyeTopY - 1, 0.9, 0, 6.28); c.fill();
-            c.beginPath(); c.arc(eyeX + 1.6, eyeBotY - 1, 0.9, 0, 6.28); c.fill();
+            c.fillStyle = 'rgba(0,0,0,0.08)';
+            c.beginPath(); c.ellipse(eyeX, eyeTopY, eyeW / 2 + 1.5, eyeH / 2 + 1.5, 0, 0, 6.28); c.fill();
+            c.beginPath(); c.ellipse(eyeX, eyeBotY, eyeW / 2 + 1.5, eyeH / 2 + 1.5, 0, 0, 6.28); c.fill();
         }
 
-        // ── Eyebrows ──
+        // Eye whites (radial gradient for roundness)
+        for (const ey of [eyeTopY, eyeBotY]) {
+            const ewG = c.createRadialGradient(eyeX - 0.5, ey - 0.5, 0, eyeX, ey, eyeW / 2);
+            ewG.addColorStop(0, '#ffffff');
+            ewG.addColorStop(0.7, '#f0f0f0');
+            ewG.addColorStop(1, '#d8d8d8');
+            c.fillStyle = ewG;
+            c.beginPath(); c.ellipse(eyeX, ey, eyeW / 2, eyeH / 2, 0, 0, 6.28); c.fill();
+        }
+
+        // Pupils + iris
+        if (car.blinking <= 0) {
+            for (const ey of [eyeTopY, eyeBotY]) {
+                // Iris ring
+                c.fillStyle = '#334';
+                c.beginPath(); c.arc(eyeX + 0.8, ey, 2.6, 0, 6.28); c.fill();
+                // Pupil (deep black)
+                c.fillStyle = '#0a0a12';
+                c.beginPath(); c.arc(eyeX + 0.8, ey, 1.6, 0, 6.28); c.fill();
+                // Main highlight (large)
+                c.fillStyle = 'rgba(255,255,255,0.95)';
+                c.beginPath(); c.arc(eyeX + 1.8, ey - 1.2, 1, 0, 6.28); c.fill();
+                // Secondary highlight (small, opposite side)
+                c.fillStyle = 'rgba(255,255,255,0.5)';
+                c.beginPath(); c.arc(eyeX - 0.3, ey + 0.8, 0.5, 0, 6.28); c.fill();
+            }
+        }
+
+        // Eyebrows (thicker, more expressive)
         if (face.brow !== 0 && car.blinking <= 0) {
-            c.strokeStyle = this._darkenColor(car.color, 70);
-            c.lineWidth = 1.3;
-            const browTilt = face.brow * 1.5;
+            c.strokeStyle = this._darkenColor(clr, 80);
+            c.lineWidth = 1.6;
+            c.lineCap = 'round';
+            const bt = face.brow * 1.8;
             c.beginPath();
-            c.moveTo(eyeX - 3.2, eyeTopY - eyeH / 2 - 2 - browTilt);
-            c.lineTo(eyeX + 3.2, eyeTopY - eyeH / 2 - 2 + browTilt);
+            c.moveTo(eyeX - 3.5, eyeTopY - eyeH / 2 - 2 - bt);
+            c.lineTo(eyeX + 3.5, eyeTopY - eyeH / 2 - 2 + bt);
             c.stroke();
             c.beginPath();
-            c.moveTo(eyeX - 3.2, eyeBotY - eyeH / 2 - 2 + browTilt);
-            c.lineTo(eyeX + 3.2, eyeBotY - eyeH / 2 - 2 - browTilt);
+            c.moveTo(eyeX - 3.5, eyeBotY - eyeH / 2 - 2 + bt);
+            c.lineTo(eyeX + 3.5, eyeBotY - eyeH / 2 - 2 - bt);
             c.stroke();
+            c.lineCap = 'butt';
         }
 
-        // ── Mouth / bumper ──
+        // ═══════════════════════════════════════
+        //  LAYER 8 — MOUTH / BUMPER (character)
+        // ═══════════════════════════════════════
         const mouthX = hw - 1;
-        c.strokeStyle = this._darkenColor(car.color, 55);
-        c.lineWidth = 1.3;
-        c.beginPath();
         if (car.charName === 'Mater') {
-            // Mater's buck teeth
-            c.strokeStyle = '#ddd';
-            c.fillStyle = '#f8f8e0';
-            c.fillRect(mouthX - 1, -2.5, 3, 5);
-            c.strokeRect(mouthX - 1, -2.5, 3, 5);
-            c.beginPath(); c.moveTo(mouthX + 0.5, -2.5); c.lineTo(mouthX + 0.5, 2.5); c.stroke();
-        } else if (face.mouth === 1) {
-            c.arc(mouthX, 0, 4, -0.8, 0.8); c.stroke();
-        } else if (face.mouth === -1) {
-            c.arc(mouthX + 2.5, 0, 4, Math.PI - 0.6, Math.PI + 0.6); c.stroke();
+            // Buck teeth (3D)
+            c.fillStyle = '#f0edd0';
+            c.strokeStyle = '#bbb';
+            c.lineWidth = 0.8;
+            c.beginPath(); c.roundRect(mouthX - 1.5, -3, 4, 6, 1); c.fill(); c.stroke();
+            c.strokeStyle = '#ccc'; c.lineWidth = 0.5;
+            c.beginPath(); c.moveTo(mouthX + 0.5, -3); c.lineTo(mouthX + 0.5, 3); c.stroke();
         } else {
-            c.moveTo(mouthX, -2.5); c.lineTo(mouthX, 2.5); c.stroke();
+            // Chrome bumper grille
+            const grG = c.createLinearGradient(mouthX - 1, -4, mouthX + 2, 4);
+            grG.addColorStop(0, '#a0a0a8'); grG.addColorStop(0.5, '#d0d0d8');
+            grG.addColorStop(1, '#808088');
+            c.strokeStyle = grG;
+            c.lineWidth = 1.5;
+            c.beginPath();
+            if (face.mouth === 1) {
+                c.arc(mouthX, 0, 4.5, -0.7, 0.7);
+            } else if (face.mouth === -1) {
+                c.arc(mouthX + 3, 0, 4.5, Math.PI - 0.5, Math.PI + 0.5);
+            } else {
+                c.moveTo(mouthX, -3); c.lineTo(mouthX, 3);
+            }
+            c.stroke();
         }
 
-        // ── Headlights ──
+        // ═══════════════════════════════════════
+        //  LAYER 9 — HEADLIGHTS (with glow)
+        // ═══════════════════════════════════════
         const isNight = this.weather === WEATHER_NIGHT;
-        c.fillStyle = isNight ? '#ffeeaa' : '#e8e0a8';
-        c.beginPath(); c.arc(hw - 1, -hh + 4, 2.5, 0, 6.28); c.fill();
-        c.beginPath(); c.arc(hw - 1, hh - 4, 2.5, 0, 6.28); c.fill();
+        for (const ly of [-hh + 4, hh - 4]) {
+            // Glow halo
+            if (isNight) {
+                c.fillStyle = 'rgba(255,240,150,0.15)';
+                c.beginPath(); c.arc(hw, ly, 7, 0, 6.28); c.fill();
+            }
+            // Headlight body
+            const hlG = c.createRadialGradient(hw - 1, ly, 0, hw - 1, ly, 3.5);
+            hlG.addColorStop(0, isNight ? '#fffde0' : '#f8f0c0');
+            hlG.addColorStop(0.5, isNight ? '#ffe880' : '#e0d898');
+            hlG.addColorStop(1, isNight ? '#ccb040' : '#b0a870');
+            c.fillStyle = hlG;
+            c.beginPath(); c.arc(hw - 1, ly, 3, 0, 6.28); c.fill();
+            // Headlight glint
+            c.fillStyle = 'rgba(255,255,255,0.7)';
+            c.beginPath(); c.arc(hw - 0.5, ly - 1, 0.8, 0, 6.28); c.fill();
+        }
 
-        // ── Taillights ──
-        c.fillStyle = '#c03030';
-        c.beginPath(); c.arc(-hw + 2, -hh + 4, 1.8, 0, 6.28); c.fill();
-        c.beginPath(); c.arc(-hw + 2, hh - 4, 1.8, 0, 6.28); c.fill();
+        // ═══════════════════════════════════════
+        //  LAYER 10 — TAILLIGHTS (with glow)
+        // ═══════════════════════════════════════
+        for (const ly of [-hh + 4, hh - 4]) {
+            // Red glow
+            c.fillStyle = 'rgba(200,30,30,0.12)';
+            c.beginPath(); c.arc(-hw + 2, ly, 5, 0, 6.28); c.fill();
+            // Taillight
+            const tlG = c.createRadialGradient(-hw + 2, ly, 0, -hw + 2, ly, 2.5);
+            tlG.addColorStop(0, '#ff4040');
+            tlG.addColorStop(0.6, '#c02020');
+            tlG.addColorStop(1, '#801010');
+            c.fillStyle = tlG;
+            c.beginPath(); c.arc(-hw + 2, ly, 2.2, 0, 6.28); c.fill();
+            // Glint
+            c.fillStyle = 'rgba(255,150,150,0.6)';
+            c.beginPath(); c.arc(-hw + 2.5, ly - 0.7, 0.6, 0, 6.28); c.fill();
+        }
 
-        // ── Name tag (tiny, under the car) ──
+        // ═══════════════════════════════════════
+        //  LAYER 11 — NAME TAG
+        // ═══════════════════════════════════════
         c.save();
-        c.fillStyle = 'rgba(255,255,255,0.45)';
-        c.font = '5px Arial';
+        c.fillStyle = 'rgba(255,255,255,0.5)';
+        c.font = 'bold 5px Arial';
         c.textAlign = 'center'; c.textBaseline = 'top';
         c.fillText(car.charName, 0, hh + 2);
         c.restore();
 
-        // ── Town visit indicator ──
+        // ═══════════════════════════════════════
+        //  LAYER 12 — TOWN VISIT CHECKMARK
+        // ═══════════════════════════════════════
         if (car.touchedTown) {
-            c.fillStyle = 'rgba(60, 200, 90, 0.75)';
-            c.beginPath(); c.arc(-hw - 5, 0, 4, 0, 6.28); c.fill();
+            c.fillStyle = 'rgba(60, 200, 90, 0.8)';
+            c.shadowColor = 'rgba(60,200,90,0.4)';
+            c.shadowBlur = 6;
+            c.beginPath(); c.arc(-hw - 6, 0, 4.5, 0, 6.28); c.fill();
+            c.shadowBlur = 0;
             c.fillStyle = '#fff';
-            c.font = 'bold 6px Arial';
+            c.font = 'bold 7px Arial';
             c.textAlign = 'center'; c.textBaseline = 'middle';
-            c.fillText('\u2713', -hw - 5, 0.3);
+            c.fillText('\u2713', -hw - 6, 0.3);
         }
 
         c.restore();
+    }
+
+    // Draw a 5-pointed star for Sheriff badge
+    _drawStar(c, cx, cy, r, points) {
+        c.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const rad = (i % 2 === 0) ? r : r * 0.45;
+            const angle = (Math.PI / points) * i - Math.PI / 2;
+            const x = cx + rad * Math.cos(angle);
+            const y = cy + rad * Math.sin(angle);
+            if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+        }
+        c.closePath(); c.fill();
     }
 
     // Color helpers for 3D car shading
