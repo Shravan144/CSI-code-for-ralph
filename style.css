@@ -18,69 +18,162 @@ body {
 /* === Overlays === */
 #tutorial-overlay {
     position: fixed; inset: 0;
-    background: rgba(15, 20, 30, 0.92);
+    background: radial-gradient(ellipse at 50% 40%, rgba(30, 42, 65, 0.97) 0%, rgba(10, 14, 22, 0.98) 100%);
     display: flex; justify-content: center; align-items: center;
     z-index: 1000;
 }
 #tutorial-overlay.hidden, #result-overlay.hidden { display: none; }
 
 .tutorial-box, .result-box {
-    background: #232d40;
-    border: 2px solid #3d5070;
-    border-radius: 14px;
-    padding: 32px 38px;
+    background: linear-gradient(168deg, #1e2a3e 0%, #16202e 100%);
+    border: 1px solid rgba(100, 140, 200, 0.15);
+    border-radius: 18px;
+    padding: 36px 40px 30px;
     text-align: center;
-    max-width: 480px; width: 92%;
+    max-width: 440px; width: 92%;
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 1px 0 rgba(255,255,255,0.05) inset;
+    position: relative;
+    overflow: hidden;
 }
+.tutorial-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #e8a84c, #d47a28, transparent);
+    border-radius: 18px 18px 0 0;
+}
+
+.title-badge {
+    font-size: 2.4rem;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
 .tutorial-box h1 {
-    font-size: 2rem; color: #e8a84c;
-    margin-bottom: 4px; letter-spacing: 1px;
+    font-size: 1.9rem;
+    color: #f0f0f0;
+    margin-bottom: 0;
+    letter-spacing: 2px;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.1;
+}
+.tutorial-box h1 .accent {
+    color: #e8a84c;
+    text-shadow: 0 0 20px rgba(232, 168, 76, 0.25);
 }
 .tutorial-box h2 {
-    font-size: 1rem; color: #a0b0c0;
-    font-weight: 400; margin-bottom: 20px;
+    font-size: 0.75rem; color: #607080;
+    font-weight: 400; margin-bottom: 22px;
+    letter-spacing: 4px; text-transform: uppercase;
 }
-.tutorial-content p {
-    color: #b0b8c8; font-size: 0.88rem;
-    margin-bottom: 16px; line-height: 1.55;
+.tutorial-content .tagline {
+    color: #8a95a8; font-size: 0.82rem;
+    margin-bottom: 20px; line-height: 1.6;
 }
-.tutorial-instructions { text-align: left; margin-bottom: 16px; }
+.tutorial-instructions {
+    text-align: left; margin-bottom: 18px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
 .instruction-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 6px 0; color: #c8d0e0; font-size: 0.85rem;
+    padding: 7px 0; color: #c0c8d5; font-size: 0.82rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-.instruction-icon {
-    font-size: 0.72rem; width: 50px; text-align: center;
-    background: #2e3a50; padding: 4px 8px; border-radius: 5px;
+.instruction-item:last-child { border-bottom: none; }
+.instruction-num {
+    font-size: 0.7rem; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(232, 168, 76, 0.12);
+    border: 1px solid rgba(232, 168, 76, 0.25);
+    border-radius: 50%;
     color: #e8a84c; font-weight: 700;
+    flex-shrink: 0;
 }
-.controls-hint {
-    background: #2a3548; border: 1px solid #3d5070;
-    border-radius: 7px; padding: 10px 14px;
-    font-size: 0.78rem; color: #90a0b8; margin-bottom: 20px;
+
+.powers-row {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+}
+.power-chip {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    color: #8090a5;
+}
+.power-chip kbd {
+    display: inline-block;
+    background: rgba(232, 168, 76, 0.15);
+    color: #e8a84c;
+    border: 1px solid rgba(232, 168, 76, 0.3);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.68rem;
+    font-family: inherit;
+    font-weight: 700;
+    margin-right: 4px;
+}
+.warning-hint {
+    font-size: 0.68rem;
+    color: #556070;
+    margin-bottom: 18px;
 }
 
 /* === Buttons === */
 .action-btn {
-    background: #d47a28;
+    background: linear-gradient(180deg, #e08a38 0%, #c46a1a 100%);
     border: none; color: #fff;
-    padding: 12px 42px; font-size: 1rem;
-    font-weight: 700; border-radius: 8px;
-    cursor: pointer; letter-spacing: 1.2px;
-    transition: background 0.15s, transform 0.1s;
+    padding: 13px 48px; font-size: 1.05rem;
+    font-weight: 800; border-radius: 10px;
+    cursor: pointer; letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 16px rgba(200, 100, 20, 0.3), 0 1px 0 rgba(255,255,255,0.15) inset;
+    transition: transform 0.12s, box-shadow 0.15s;
+    position: relative;
 }
-.action-btn:hover { background: #e08a38; transform: scale(1.02); }
+.action-btn:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 24px rgba(200, 100, 20, 0.45), 0 1px 0 rgba(255,255,255,0.15) inset;
+}
+.action-btn:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 8px rgba(200, 100, 20, 0.25);
+}
 
 /* === Result === */
 #result-overlay {
     position: fixed; inset: 0;
-    background: rgba(15, 20, 30, 0.92);
+    background: radial-gradient(ellipse at 50% 40%, rgba(30, 42, 65, 0.97) 0%, rgba(10, 14, 22, 0.98) 100%);
     display: flex; justify-content: center; align-items: center;
     z-index: 1000;
 }
-.result-box h1 { font-size: 2rem; margin-bottom: 14px; }
-.result-box h1.win { color: #58c878; }
-.result-box h1.lose { color: #d85050; }
+.result-box {
+    position: relative;
+    overflow: hidden;
+}
+.result-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+}
+.result-box:has(h1.win)::before {
+    background: linear-gradient(90deg, transparent, #58c878, #40a060, transparent);
+}
+.result-box:has(h1.lose)::before {
+    background: linear-gradient(90deg, transparent, #d85050, #b03030, transparent);
+}
+.result-box h1 { font-size: 1.8rem; margin-bottom: 14px; font-weight: 800; letter-spacing: 1px; }
+.result-box h1.win { color: #58c878; text-shadow: 0 0 20px rgba(88, 200, 120, 0.2); }
+.result-box h1.lose { color: #d85050; text-shadow: 0 0 20px rgba(216, 80, 80, 0.2); }
 #result-stats {
     color: #b0b8c8; font-size: 0.9rem;
     margin-bottom: 22px; line-height: 2;
