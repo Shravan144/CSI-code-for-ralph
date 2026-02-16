@@ -18,6 +18,20 @@ const EMPTY = 0, ROAD = 1, HIGHWAY = 2, TOWN = 3, GATE = 4, SPAWN = 5, EXIT = 6;
 const GAME_TIME = 180, WIN_REDIRECT = 200, START_ECONOMY = 70;
 const CAR_PALETTE = ['#c04444', '#3878b8', '#c8a030', '#38a878', '#b858a0', '#c87030', '#7858b8'];
 
+// Cars (2006) Movie Characters
+const CAR_CHARACTERS = [
+    { name: 'McQueen',  color: '#d42020', accent: '#f5c518', isTruck: false, face: { eyeH: 1, mouth: 1, brow: 1 },  decal: '95',  bodyStyle: 'racer' },
+    { name: 'Mater',    color: '#8b5e34', accent: '#6b4420', isTruck: true,  face: { eyeH: 1, mouth: 1, brow: 0 },  decal: 'tow', bodyStyle: 'truck' },
+    { name: 'Sally',    color: '#4a90d9', accent: '#7ab8ff', isTruck: false, face: { eyeH: 0, mouth: 1, brow: 0 },  decal: null,  bodyStyle: 'porsche' },
+    { name: 'Doc',      color: '#1a2d45', accent: '#3a6090', isTruck: false, face: { eyeH: -1, mouth: 0, brow: -1 }, decal: '51',  bodyStyle: 'hudson' },
+    { name: 'Luigi',    color: '#e8c820', accent: '#f0e060', isTruck: false, face: { eyeH: 0, mouth: 1, brow: 0 },  decal: null,  bodyStyle: 'fiat' },
+    { name: 'Ramone',   color: '#6a1b9a', accent: '#ff6d00', isTruck: false, face: { eyeH: 0, mouth: 1, brow: 1 },  decal: null,  bodyStyle: 'lowrider' },
+    { name: 'Sheriff',  color: '#2e4033', accent: '#c0c0c0', isTruck: false, face: { eyeH: -1, mouth: 0, brow: -1 }, decal: null,  bodyStyle: 'cruiser' },
+    { name: 'Fillmore', color: '#30785a', accent: '#90d8a0', isTruck: true,  face: { eyeH: 0, mouth: 1, brow: 0 },  decal: 'vw',  bodyStyle: 'van' },
+    { name: 'Chick',    color: '#48a848', accent: '#c8e020', isTruck: false, face: { eyeH: -1, mouth: -1, brow: -1 }, decal: '86', bodyStyle: 'racer' },
+    { name: 'Flo',      color: '#c85098', accent: '#ff80c0', isTruck: false, face: { eyeH: 0, mouth: 1, brow: 0 },  decal: null,  bodyStyle: 'showcar' },
+];
+
 // Level configuration [redirectTarget, spawnRate, carSpeed, shuffleInterval(frames), gateToggleInterval, maxCarsOnScreen]
 const LEVELS = [
     { target: 15,  spawnRate: 180, speed: 1.1,  shuffleEvery: 0,    gateToggle: 0,    maxCars: 6  },  // L1 intro
@@ -104,30 +118,32 @@ const CAR_FACES = [
 
 // ==================== CAR ====================
 class Car {
-    constructor(row, col, isTruck = false) {
+    constructor(row, col, character = null) {
         this.gRow = row; this.gCol = col;
         this.dir = RIGHT;
         this.x = col * TILE + TILE / 2;
         this.y = row * TILE + TILE / 2;
         this.tx = this.x + TILE;
         this.ty = this.y;
-        this.color = CAR_PALETTE[Math.floor(Math.random() * CAR_PALETTE.length)];
         this.alive = true;
         this.touchedTown = false;
-        this.speed = 1.15;
-        this.baseSpeed = 1.15;
-        // Cartoon car personality
-        this.face = CAR_FACES[Math.floor(Math.random() * CAR_FACES.length)];
         this.blinkTimer = 80 + Math.floor(Math.random() * 120);
         this.blinking = 0;
-        // Truck type — bigger, slower, worth more
-        this.isTruck = isTruck;
-        if (isTruck) {
-            this.baseSpeed = 0.85;
-            this.speed = 0.85;
-            this.color = ['#556688', '#886644', '#668855', '#885566', '#666688'][Math.floor(Math.random() * 5)];
-            this.face = CAR_FACES[2]; // worried face — trucks are nervous
-        }
+
+        // Assign character from Cars movie
+        if (!character) character = CAR_CHARACTERS[Math.floor(Math.random() * CAR_CHARACTERS.length)];
+        this.character = character;
+        this.color = character.color;
+        this.accent = character.accent;
+        this.face = character.face;
+        this.isTruck = character.isTruck;
+        this.bodyStyle = character.bodyStyle;
+        this.decal = character.decal;
+        this.charName = character.name;
+
+        // Speed
+        this.baseSpeed = this.isTruck ? 0.85 : 1.15;
+        this.speed = this.baseSpeed;
     }
 }
 
@@ -598,7 +614,8 @@ class Game {
         if (this.cars.some(car => car.alive && car.gRow === pick.r &&
             Math.abs(car.x - (pick.c * TILE + TILE / 2)) < TILE * 1.3)) return;
 
-        const car = new Car(pick.r, pick.c, Math.random() < 0.2); // 20% chance truck
+        const char = CAR_CHARACTERS[Math.floor(Math.random() * CAR_CHARACTERS.length)];
+        const car = new Car(pick.r, pick.c, char);
         // Apply level speed, weather, and slow power
         car.baseSpeed = car.isTruck ? car.baseSpeed : this.levelConfig.speed;
         const weatherMod = this.getWeatherSpeedModifier();
@@ -1337,7 +1354,7 @@ class Game {
         // Blink logic
         car.blinkTimer--;
         if (car.blinkTimer <= 0) {
-            car.blinking = 6; // blink for 6 frames
+            car.blinking = 6;
             car.blinkTimer = 80 + Math.floor(Math.random() * 120);
         }
         if (car.blinking > 0) car.blinking--;
@@ -1347,143 +1364,300 @@ class Game {
         c.rotate(DIR_ANGLES[car.dir]);
 
         const isTruck = car.isTruck;
-        const hw = isTruck ? 26 : 20, hh = isTruck ? 15 : 13;
+        const style = car.bodyStyle;
         const face = car.face;
+        const hw = isTruck ? 26 : (style === 'fiat' ? 16 : 20);
+        const hh = isTruck ? 15 : (style === 'fiat' ? 11 : 13);
 
-        // Ground shadow
-        c.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        // ── Ground shadow ──
+        c.fillStyle = 'rgba(0,0,0,0.22)';
         c.beginPath();
         c.ellipse(1, hh + 5, hw - 2, 6, 0, 0, 6.28);
         c.fill();
 
-        // --- Truck cargo box (behind cab) ---
-        if (isTruck) {
-            const cargoGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
-            cargoGrad.addColorStop(0, this._lightenColor(car.color, 15));
-            cargoGrad.addColorStop(1, this._darkenColor(car.color, 35));
-            c.fillStyle = cargoGrad;
-            c.beginPath(); c.roundRect(-hw, -hh + 1, hw * 0.9, hh * 2 - 2, 3); c.fill();
-            // Cargo ribs
-            c.strokeStyle = this._darkenColor(car.color, 45);
-            c.lineWidth = 0.6;
-            for (let i = 0; i < 3; i++) {
-                const rx = -hw + 5 + i * 7;
-                c.beginPath(); c.moveTo(rx, -hh + 3); c.lineTo(rx, hh - 3); c.stroke();
+        // ── CHARACTER-SPECIFIC BODY SHAPES ──
+        if (style === 'truck') {
+            // MATER — rusty tow truck with flat bed
+            const bedGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bedGrad.addColorStop(0, this._lightenColor(car.color, 10));
+            bedGrad.addColorStop(1, this._darkenColor(car.color, 30));
+            c.fillStyle = bedGrad;
+            c.beginPath(); c.roundRect(-hw, -hh + 2, hw * 0.85, hh * 2 - 4, 2); c.fill();
+            // Rust spots
+            c.fillStyle = 'rgba(90, 50, 20, 0.35)';
+            c.beginPath(); c.arc(-hw + 8, -4, 3, 0, 6.28); c.fill();
+            c.beginPath(); c.arc(-hw + 14, 5, 2.5, 0, 6.28); c.fill();
+            // Tow hook
+            c.strokeStyle = '#555';
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(-hw + 2, 0);
+            c.lineTo(-hw - 8, 0);
+            c.arc(-hw - 8, 4, 4, -Math.PI / 2, Math.PI * 0.7);
+            c.stroke();
+            // Cab
+            const cabGrad = c.createLinearGradient(-hw * 0.15, -hh, -hw * 0.15, hh);
+            cabGrad.addColorStop(0, this._lightenColor(car.color, 30));
+            cabGrad.addColorStop(0.4, car.color);
+            cabGrad.addColorStop(1, this._darkenColor(car.color, 40));
+            c.fillStyle = cabGrad;
+            c.beginPath(); c.roundRect(-hw * 0.15, -hh, hw * 1.15, hh * 2, 5); c.fill();
+        } else if (style === 'van') {
+            // FILLMORE — VW bus style, boxy tall
+            const vanGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            vanGrad.addColorStop(0, this._lightenColor(car.color, 25));
+            vanGrad.addColorStop(0.5, car.color);
+            vanGrad.addColorStop(1, this._darkenColor(car.color, 35));
+            c.fillStyle = vanGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [4, 8, 8, 4]); c.fill();
+            // Hippie stripe
+            c.fillStyle = car.accent;
+            c.globalAlpha = 0.35;
+            c.beginPath(); c.roundRect(-hw + 2, -2, hw * 2 - 4, 4, 2); c.fill();
+            c.globalAlpha = 1;
+            // Peace symbol (small)
+            c.strokeStyle = car.accent;
+            c.lineWidth = 1;
+            c.beginPath(); c.arc(-hw / 2, 0, 4, 0, 6.28); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, -4); c.lineTo(-hw / 2, 4); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 - 2.8, 2.8); c.stroke();
+            c.beginPath(); c.moveTo(-hw / 2, 0); c.lineTo(-hw / 2 + 2.8, 2.8); c.stroke();
+        } else if (style === 'racer') {
+            // MCQUEEN / CHICK — sleek low-slung racer with spoiler
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 40));
+            bodyGrad.addColorStop(0.3, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 50));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [6, 14, 14, 6]); c.fill();
+            // Rear spoiler
+            c.fillStyle = this._darkenColor(car.color, 30);
+            c.beginPath();
+            c.roundRect(-hw - 2, -hh - 3, 5, hh * 2 + 6, 1);
+            c.fill();
+            // Racing stripe
+            if (car.charName === 'McQueen') {
+                // Lightning bolt decal
+                c.fillStyle = '#f5c518';
+                c.beginPath();
+                c.moveTo(-8, -hh + 2); c.lineTo(4, -4); c.lineTo(0, -3);
+                c.lineTo(8, hh - 2); c.lineTo(-4, 4); c.lineTo(0, 3);
+                c.closePath(); c.fill();
             }
+            if (car.charName === 'Chick') {
+                // Chick Hicks "thunder" stripes
+                c.fillStyle = car.accent;
+                c.globalAlpha = 0.5;
+                c.beginPath(); c.roundRect(-6, -hh + 1, 12, 3, 1); c.fill();
+                c.beginPath(); c.roundRect(-6, hh - 4, 12, 3, 1); c.fill();
+                c.globalAlpha = 1;
+            }
+        } else if (style === 'porsche') {
+            // SALLY — curvy Porsche shape, smooth contours
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 45));
+            bodyGrad.addColorStop(0.35, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 45));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [10, 16, 16, 10]); c.fill();
+            // Pinstripe accent
+            c.strokeStyle = car.accent;
+            c.lineWidth = 0.8;
+            c.globalAlpha = 0.5;
+            c.beginPath();
+            c.moveTo(-hw + 5, -hh + hh); c.lineTo(hw - 5, -hh + hh);
+            c.stroke();
+            c.globalAlpha = 1;
+        } else if (style === 'hudson') {
+            // DOC HUDSON — classic boxy vintage shape
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 30));
+            bodyGrad.addColorStop(0.4, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [4, 6, 6, 4]); c.fill();
+            // Chrome trim lines
+            c.strokeStyle = '#a0b0c0';
+            c.lineWidth = 0.8;
+            c.beginPath(); c.moveTo(-hw + 3, -hh + 5); c.lineTo(hw - 8, -hh + 5); c.stroke();
+            c.beginPath(); c.moveTo(-hw + 3, hh - 5); c.lineTo(hw - 8, hh - 5); c.stroke();
+        } else if (style === 'fiat') {
+            // LUIGI — tiny round Fiat 500
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 40));
+            bodyGrad.addColorStop(0.4, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 10); c.fill();
+        } else if (style === 'lowrider') {
+            // RAMONE — low wide body with flame accents
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 30));
+            bodyGrad.addColorStop(0.35, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 55));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [5, 10, 10, 5]); c.fill();
+            // Flame accents on sides
+            c.fillStyle = car.accent;
+            c.globalAlpha = 0.6;
+            for (let i = 0; i < 3; i++) {
+                const fx = -hw + 6 + i * 8;
+                c.beginPath();
+                c.moveTo(fx, -hh + 2); c.lineTo(fx + 3, -hh + 6); c.lineTo(fx + 6, -hh + 2);
+                c.fill();
+                c.beginPath();
+                c.moveTo(fx, hh - 2); c.lineTo(fx + 3, hh - 6); c.lineTo(fx + 6, hh - 2);
+                c.fill();
+            }
+            c.globalAlpha = 1;
+        } else if (style === 'cruiser') {
+            // SHERIFF — police cruiser with light bar
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 25));
+            bodyGrad.addColorStop(0.4, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 40));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [5, 8, 8, 5]); c.fill();
+            // Light bar on top
+            const flash = Math.sin(Date.now() * 0.008) > 0;
+            c.fillStyle = flash ? '#ff2020' : '#2040ff';
+            c.beginPath(); c.roundRect(-3, -hh - 3, 3, 3, 1); c.fill();
+            c.fillStyle = flash ? '#2040ff' : '#ff2020';
+            c.beginPath(); c.roundRect(1, -hh - 3, 3, 3, 1); c.fill();
+            // Badge
+            c.fillStyle = car.accent;
+            c.beginPath(); c.arc(-hw / 2, 0, 3, 0, 6.28); c.fill();
+        } else if (style === 'showcar') {
+            // FLO — retro show car with curves
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 35));
+            bodyGrad.addColorStop(0.35, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 45));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, [8, 12, 12, 8]); c.fill();
+            // Chrome bumper highlight
+            c.fillStyle = 'rgba(255,255,255,0.15)';
+            c.beginPath(); c.roundRect(hw - 5, -hh + 3, 4, hh * 2 - 6, 2); c.fill();
+        } else {
+            // Generic fallback body
+            const bodyGrad = c.createLinearGradient(-hw, -hh, -hw, hh);
+            bodyGrad.addColorStop(0, this._lightenColor(car.color, 35));
+            bodyGrad.addColorStop(0.35, car.color);
+            bodyGrad.addColorStop(1, this._darkenColor(car.color, 50));
+            c.fillStyle = bodyGrad;
+            c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 5); c.fill();
         }
 
-        // --- Car/Cab body ---
-        const cabLeft = isTruck ? -hw * 0.1 : -hw;
-        const cabW = isTruck ? hw * 1.1 : hw * 2;
-        const bodyGrad = c.createLinearGradient(cabLeft, -hh, cabLeft, hh);
-        bodyGrad.addColorStop(0, this._lightenColor(car.color, 35));
-        bodyGrad.addColorStop(0.35, car.color);
-        bodyGrad.addColorStop(1, this._darkenColor(car.color, 50));
-        c.fillStyle = bodyGrad;
-        c.beginPath(); c.roundRect(cabLeft, -hh, cabW, hh * 2, 5); c.fill();
-
-        // Body outline
+        // ── Body outline ──
         c.strokeStyle = this._darkenColor(car.color, 60);
         c.lineWidth = 0.8;
-        c.beginPath(); c.roundRect(cabLeft, -hh, cabW, hh * 2, 5); c.stroke();
+        c.beginPath(); c.roundRect(-hw, -hh, hw * 2, hh * 2, 5); c.stroke();
 
-        // Top shine strip
-        c.fillStyle = 'rgba(255, 255, 255, 0.12)';
-        c.beginPath(); c.roundRect(cabLeft + 4, -hh + 1, cabW - 8, 4, 2); c.fill();
+        // ── Top shine strip ──
+        c.fillStyle = 'rgba(255,255,255,0.10)';
+        c.beginPath(); c.roundRect(-hw + 4, -hh + 1, hw * 2 - 8, 3, 2); c.fill();
 
-        // --- Windshield area (where the eyes go!) ---
+        // ── Decal number ──
+        if (car.decal && car.decal !== 'tow' && car.decal !== 'vw') {
+            c.save();
+            c.fillStyle = '#fff';
+            c.font = 'bold 8px Arial';
+            c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.globalAlpha = 0.7;
+            c.fillText(car.decal, -hw / 2 + 2, 0);
+            c.restore();
+        }
+
+        // ── Windshield (eyes live here) ──
         const wsLeft = hw - 13;
-        c.fillStyle = 'rgba(180, 220, 250, 0.4)';
+        c.fillStyle = 'rgba(180, 220, 250, 0.35)';
         c.beginPath();
         c.roundRect(wsLeft, -hh + 2, 11, hh * 2 - 4, [2, 3, 3, 2]);
         c.fill();
 
-        // --- EYES on windshield (the signature look!) ---
-        const eyeX = hw - 7;       // horizontal center of windshield
-        const eyeSpacing = 6;      // distance between eyes
+        // ── EYES ──
+        const eyeX = hw - 7;
+        const eyeSpacing = style === 'fiat' ? 5 : 6;
         const eyeTopY = -eyeSpacing / 2 - 0.5;
         const eyeBotY = eyeSpacing / 2 - 0.5;
-        const eyeW = 5.5;
-        const eyeBaseH = 6 + face.eyeH * 1;
+        const eyeW = style === 'fiat' ? 4.5 : 5.5;
+        const eyeBaseH = 6 + face.eyeH;
         const eyeH = car.blinking > 0 ? 1.2 : eyeBaseH;
 
         // Eye whites
         c.fillStyle = '#f0f0f0';
-        c.beginPath();
-        c.ellipse(eyeX, eyeTopY, eyeW / 2, eyeH / 2, 0, 0, 6.28);
-        c.fill();
-        c.beginPath();
-        c.ellipse(eyeX, eyeBotY, eyeW / 2, eyeH / 2, 0, 0, 6.28);
-        c.fill();
+        c.beginPath(); c.ellipse(eyeX, eyeTopY, eyeW / 2, eyeH / 2, 0, 0, 6.28); c.fill();
+        c.beginPath(); c.ellipse(eyeX, eyeBotY, eyeW / 2, eyeH / 2, 0, 0, 6.28); c.fill();
 
-        // Pupils (look in direction of travel!)
+        // Pupils
         if (car.blinking <= 0) {
             const pupilSize = 2.2;
+            // Character-specific pupil color (Doc has blue, Mater green-ish)
             c.fillStyle = '#1a1a2a';
-            c.beginPath();
-            c.arc(eyeX + 0.8, eyeTopY, pupilSize, 0, 6.28);
-            c.fill();
-            c.beginPath();
-            c.arc(eyeX + 0.8, eyeBotY, pupilSize, 0, 6.28);
-            c.fill();
+            c.beginPath(); c.arc(eyeX + 0.8, eyeTopY, pupilSize, 0, 6.28); c.fill();
+            c.beginPath(); c.arc(eyeX + 0.8, eyeBotY, pupilSize, 0, 6.28); c.fill();
 
-            // Tiny highlight in each eye
-            c.fillStyle = '#ffffff';
-            c.beginPath();
-            c.arc(eyeX + 1.6, eyeTopY - 1, 0.9, 0, 6.28);
-            c.fill();
-            c.beginPath();
-            c.arc(eyeX + 1.6, eyeBotY - 1, 0.9, 0, 6.28);
-            c.fill();
+            // Highlight
+            c.fillStyle = '#fff';
+            c.beginPath(); c.arc(eyeX + 1.6, eyeTopY - 1, 0.9, 0, 6.28); c.fill();
+            c.beginPath(); c.arc(eyeX + 1.6, eyeBotY - 1, 0.9, 0, 6.28); c.fill();
         }
 
-        // Eyebrows (if face has them)
+        // ── Eyebrows ──
         if (face.brow !== 0 && car.blinking <= 0) {
             c.strokeStyle = this._darkenColor(car.color, 70);
             c.lineWidth = 1.3;
             const browTilt = face.brow * 1.5;
-            // Top eye brow
             c.beginPath();
             c.moveTo(eyeX - 3.2, eyeTopY - eyeH / 2 - 2 - browTilt);
             c.lineTo(eyeX + 3.2, eyeTopY - eyeH / 2 - 2 + browTilt);
             c.stroke();
-            // Bottom eye brow
             c.beginPath();
             c.moveTo(eyeX - 3.2, eyeBotY - eyeH / 2 - 2 + browTilt);
             c.lineTo(eyeX + 3.2, eyeBotY - eyeH / 2 - 2 - browTilt);
             c.stroke();
         }
 
-        // --- Mouth / front bumper ---
+        // ── Mouth / bumper ──
         const mouthX = hw - 1;
         c.strokeStyle = this._darkenColor(car.color, 55);
         c.lineWidth = 1.3;
         c.beginPath();
-        if (face.mouth === 1) {
-            // Smile
-            c.arc(mouthX, 0, 4, -0.8, 0.8);
+        if (car.charName === 'Mater') {
+            // Mater's buck teeth
+            c.strokeStyle = '#ddd';
+            c.fillStyle = '#f8f8e0';
+            c.fillRect(mouthX - 1, -2.5, 3, 5);
+            c.strokeRect(mouthX - 1, -2.5, 3, 5);
+            c.beginPath(); c.moveTo(mouthX + 0.5, -2.5); c.lineTo(mouthX + 0.5, 2.5); c.stroke();
+        } else if (face.mouth === 1) {
+            c.arc(mouthX, 0, 4, -0.8, 0.8); c.stroke();
         } else if (face.mouth === -1) {
-            // Worried frown
-            c.arc(mouthX + 2.5, 0, 4, Math.PI - 0.6, Math.PI + 0.6);
+            c.arc(mouthX + 2.5, 0, 4, Math.PI - 0.6, Math.PI + 0.6); c.stroke();
         } else {
-            // Neutral line
-            c.moveTo(mouthX, -2.5); c.lineTo(mouthX, 2.5);
+            c.moveTo(mouthX, -2.5); c.lineTo(mouthX, 2.5); c.stroke();
         }
-        c.stroke();
 
-        // --- Headlights (the "cheeks") ---
+        // ── Headlights ──
         const isNight = this.weather === WEATHER_NIGHT;
         c.fillStyle = isNight ? '#ffeeaa' : '#e8e0a8';
         c.beginPath(); c.arc(hw - 1, -hh + 4, 2.5, 0, 6.28); c.fill();
         c.beginPath(); c.arc(hw - 1, hh - 4, 2.5, 0, 6.28); c.fill();
 
-        // --- Taillights ---
-        const tailX = isTruck ? -hw + 2 : -hw + 2;
+        // ── Taillights ──
         c.fillStyle = '#c03030';
-        c.beginPath(); c.arc(tailX, -hh + 4, 1.8, 0, 6.28); c.fill();
-        c.beginPath(); c.arc(tailX, hh - 4, 1.8, 0, 6.28); c.fill();
+        c.beginPath(); c.arc(-hw + 2, -hh + 4, 1.8, 0, 6.28); c.fill();
+        c.beginPath(); c.arc(-hw + 2, hh - 4, 1.8, 0, 6.28); c.fill();
 
-        // --- Town visit indicator ---
+        // ── Name tag (tiny, under the car) ──
+        c.save();
+        c.fillStyle = 'rgba(255,255,255,0.45)';
+        c.font = '5px Arial';
+        c.textAlign = 'center'; c.textBaseline = 'top';
+        c.fillText(car.charName, 0, hh + 2);
+        c.restore();
+
+        // ── Town visit indicator ──
         if (car.touchedTown) {
             c.fillStyle = 'rgba(60, 200, 90, 0.75)';
             c.beginPath(); c.arc(-hw - 5, 0, 4, 0, 6.28); c.fill();
