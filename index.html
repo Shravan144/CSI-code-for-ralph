@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highway Havoc: Save the Town</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay">
+        <div class="tutorial-box">
+            <h1>Highway Havoc</h1>
+            <h2>Save the Town!</h2>
+            <div class="tutorial-content">
+                <p>A new super highway is stealing all traffic from your small desert town. Redirect cars through town to keep the economy alive!</p>
+                <div class="tutorial-instructions">
+                    <div class="instruction-item">
+                        <span class="instruction-icon">Click</span>
+                        <span>road tiles to <strong>rotate</strong> direction</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">Toggle</span>
+                        <span>highway <strong>gates</strong> to block traffic</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">Route</span>
+                        <span>cars <strong>through town</strong> (center)</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">Survive</span>
+                        <span><strong>5 levels</strong> of increasing chaos!</span>
+                    </div>
+                </div>
+                <div class="controls-hint">
+                    Powers: <strong>Q</strong> Slow Traffic &middot; <strong>W</strong> Clear Roads &middot; <strong>E</strong> Economy Boost<br>
+                    <small style="color:#78889a">Warning: Roads shuffle &amp; gates auto-toggle as levels increase!</small>
+                </div>
+            </div>
+            <button id="start-btn" class="action-btn">START GAME</button>
+        </div>
+    </div>
+
+    <!-- Win/Lose Overlay -->
+    <div id="result-overlay" class="hidden">
+        <div class="result-box">
+            <h1 id="result-title"></h1>
+            <div id="result-stats"></div>
+            <button id="result-restart-btn" class="action-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <!-- Top Dashboard -->
+        <div id="top-bar">
+            <div class="stat-group">
+                <div class="stat-label">LEVEL</div>
+                <div id="level-display" class="stat-value level-val">1</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">ECONOMY</div>
+                <div class="economy-bar-container">
+                    <div id="economy-bar" class="economy-bar">
+                        <div id="economy-fill"></div>
+                    </div>
+                    <span id="economy-value">70</span>
+                </div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">REDIRECTED</div>
+                <div id="redirect-percent" class="stat-value">0%</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">SCORE</div>
+                <div id="score-display" class="stat-value">0</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">COMBO</div>
+                <div id="combo-display" class="stat-value combo-val">x1</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">HIGH SCORE</div>
+                <div id="highscore-display" class="stat-value">0</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">TIME</div>
+                <div id="timer-display" class="stat-value timer">3:00</div>
+            </div>
+        </div>
+
+        <!-- Canvas wrapper for 3D perspective -->
+        <div id="perspective-wrapper">
+            <div id="parallax-sky" class="parallax-layer"></div>
+            <div id="parallax-mountains" class="parallax-layer"></div>
+            <div id="canvas-stage">
+                <canvas id="game-canvas"></canvas>
+                <div id="weather-overlay"></div>
+                <div id="combo-popup" class="hidden"></div>
+                <div id="level-banner" class="hidden"></div>
+                <div id="shuffle-warn" class="hidden">ROADS SHUFFLING!</div>
+            </div>
+        </div>
+
+        <!-- Power-ups bar -->
+        <div id="powers-bar">
+            <button id="power-slow" class="power-btn" title="Slow all cars 5s (Q)">
+                <span class="power-icon">&#9201;</span>
+                <span class="power-name">SLOW</span>
+                <span id="power-slow-count" class="power-count">3</span>
+            </button>
+            <button id="power-clear" class="power-btn" title="Clear traffic (W)">
+                <span class="power-icon">&#9889;</span>
+                <span class="power-name">CLEAR</span>
+                <span id="power-clear-count" class="power-count">2</span>
+            </button>
+            <button id="power-boost" class="power-btn" title="Economy +15 (E)">
+                <span class="power-icon">&#9733;</span>
+                <span class="power-name">BOOST</span>
+                <span id="power-boost-count" class="power-count">2</span>
+            </button>
+            <div id="weather-indicator">
+                <span id="weather-icon">&#9728;</span>
+                <span id="weather-text">Clear</span>
+            </div>
+            <div id="difficulty-display" class="difficulty-tag">EASY</div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div id="bottom-bar">
+            <button id="pause-btn" class="control-btn">PAUSE</button>
+            <button id="restart-btn" class="control-btn">RESTART</button>
+        </div>
+    </div>
+
+    <div id="particles-container"></div>
+    <script src="script.js"></script>
+</body>
+</html>
